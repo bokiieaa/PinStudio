@@ -63,8 +63,8 @@ footer{padding:34px 28px;text-align:center;color:var(--muted);border-top:1px sol
 <footer>© <span id="year"></span> Pin Studio. Made for creative ideas.</footer>
 <script>
 /* SETUP: paste your Supabase Project URL and anon/public key below. Never put a service_role key in this file. */
-const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://bwejkyftmqxdvlcsnwov.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_NHwbzi01qt3ALn5aqTunzg_dPHlLwsC";
 const EMAIL_FUNCTION_NAME = "send-pin-submission";
 const clientReady = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
 const supabaseClient = clientReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
