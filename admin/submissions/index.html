@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pin Studio — Request Inbox</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#faf8f4;--ink:#24232b;--muted:#777582;--line:#e8e3dc;--pink:#ff5d8f;--purple:#7562e8;--green:#dff3a0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+header{max-width:1100px;margin:auto;padding:25px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+.logo{font-size:21px;font-weight:950;letter-spacing:-1px}.logo span{color:var(--pink)}
+main{max-width:1100px;margin:38px auto;padding:0 24px}.top{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}
+h1{font-size:42px;letter-spacing:-2px;line-height:1.05;margin:0 0 7px}.muted{color:var(--muted)}
+button,.btn{border:0;border-radius:11px;padding:12px 16px;background:var(--ink);color:#fff;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}
+button.secondary{background:#eeeafc;color:#493bb0}button:disabled{opacity:.5;cursor:wait}
+.panel{background:#fff;border:1px solid var(--line);border-radius:19px;padding:22px;margin-bottom:18px}
+label{display:block;font-weight:800;font-size:13px;margin:13px 0 6px}input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+.login{max-width:430px;margin:60px auto}.login h2{margin:0 0 6px}.login button{width:100%;margin-top:18px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.toolbar .muted{font-size:13px}
+#status{font-size:13px;color:var(--muted);margin-top:12px}
+.request{display:grid;grid-template-columns:1fr auto;gap:16px;padding:18px 0;border-top:1px solid var(--line)}
+.request:first-child{border-top:0}.request h3{margin:0;font-size:17px}.meta{font-size:13px;color:var(--muted);margin:4px 0 10px}.notes{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0}.pill{display:inline-block;background:#f0edff;color:#5546b9;padding:4px 9px;border-radius:99px;font-size:12px;font-weight:850}
+.new{background:#eaf6cb;color:#405c0d}.filelink{font-weight:800;color:#5949c6}.empty{text-align:center;padding:42px 12px;color:var(--muted)}
+#app{display:none}.small{font-size:12px;color:var(--muted)}@media(max-width:650px){.top{display:block}h1{font-size:34px}.request{grid-template-columns:1fr}.request .actions{display:flex;gap:8px;flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header><div class="logo">PIN<span>STUDIO.</span> <span style="color:#777582;font-size:13px;letter-spacing:0;font-weight:700">/ REQUEST INBOX</span></div><button id="logout" class="secondary" style="display:none">Sign out</button></header>
+<main>
+ <section id="loginPanel" class="panel login">
+  <h2>Owner sign in</h2><div class="muted">Sign in with the admin account you created in Supabase Authentication.</div>
+  <form id="loginForm"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required><button type="submit" id="loginBtn">Sign in</button></form>
+  <div id="loginStatus" class="small" role="status"></div>
+ </section>
+ <section id="app">
+  <div class="top"><div><h1>New pin requests.</h1><div class="muted">Your private inbox for submitted designs.</div></div>
+   <div class="toolbar"><button id="enableAlerts" class="secondary">Enable sound & notifications</button><button id="refresh">Refresh</button></div>
+  </div>
+  <div class="panel"><div class="toolbar"><span class="pill" id="count">0 requests</span><span class="muted" id="lastChecked">Not checked yet</span></div><div id="requests"><div class="empty">Loading submissions…</div></div><div id="status" role="status"></div></div>
+  <p class="small">Keep this page open to receive alerts. Browser notifications require permission; sound starts after you enable alerts. New requests are checked every 10 seconds.</p>
+ </section>
+</main>
+<script>
+/* Use the same Supabase project as the public pin submission site.
+   Use only the anon/public key here. Never put a service_role key in a website. */
+const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const ready = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
+const db = ready ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const $ = id => document.getElementById(id);
+let knownIds = new Set();
+let firstLoad = true;
+let alertsEnabled = false;
+let audioContext = null;
+let pollHandle = null;
+
+function sayStatus(message){ $("status").textContent = message; }
+function escapeHtml(value){return String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function playChime(){
+ if(!alertsEnabled || !audioContext) return;
+ const now=audioContext.currentTime;
+ [660,880].forEach((freq,i)=>{const osc=audioContext.createOscillator();const gain=audioContext.createGain();osc.type="sine";osc.frequency.value=freq;gain.gain.setValueAtTime(.0001,now+i*.16);gain.gain.exponentialRampToValueAtTime(.16,now+i*.16+.025);gain.gain.exponentialRampToValueAtTime(.0001,now+i*.16+.28);osc.connect(gain);gain.connect(audioContext.destination);osc.start(now+i*.16);osc.stop(now+i*.16+.3);});
+}
+async function enableAlerts(){
+ try{
+  if("Notification" in window && Notification.permission==="default") await Notification.requestPermission();
+  audioContext = audioContext || new (window.AudioContext||window.webkitAudioContext)();
+  await audioContext.resume();
+  alertsEnabled=true;
+  $("enableAlerts").textContent="Alerts enabled ✓";
+  $("enableAlerts").disabled=true;
+  sayStatus("Alerts are enabled. Keep this tab open.");
+ }catch(e){sayStatus("Could not enable sound. Check your browser permissions.");}
+}
+$("enableAlerts").addEventListener("click",enableAlerts);
+
+function notifyNew(row){
+ playChime();
+ if(alertsEnabled && "Notification" in window && Notification.permission==="granted"){
+  new Notification("New pin design request!",{body:`${row.customer_name} submitted a request for ${row.package_quantity} pin(s).`,tag:row.id});
+ }
+}
+function renderRows(rows){
+ $("count").textContent=`${rows.length} request${rows.length===1?"":"s"}`;
+ if(!rows.length){$("requests").innerHTML='<div class="empty">No submissions yet. New requests will appear here.</div>';return;}
+ $("requests").innerHTML=rows.map(r=>{
+  const date=r.created_at?new Date(r.created_at).toLocaleString():"Date unavailable";
+  const price=Number(r.package_price);
+  return `<article class="request">
+   <div><h3>${escapeHtml(r.customer_name)}</h3>
+    <div class="meta">${escapeHtml(r.customer_email)} · ${escapeHtml(date)}</div>
+    <span class="pill">${escapeHtml(r.package_quantity)} pins · $${Number.isFinite(price)?price:"—"}</span>
+    ${r.notes?`<p class="notes">${escapeHtml(r.notes)}</p>`:""}
+    <div class="meta">File: ${escapeHtml(r.original_filename||"Design upload")}</div>
+   </div>
+   <div class="actions"><button class="secondary" data-file="${escapeHtml(r.design_path)}">View design</button></div>
+  </article>`;
+ }).join("");
+ $("requests").querySelectorAll("[data-file]").forEach(btn=>btn.addEventListener("click",async()=>{
+  btn.disabled=true;btn.textContent="Preparing…";
+  const {data,error}=await db.storage.from("pin-designs").createSignedUrl(btn.dataset.file,60);
+  btn.disabled=false;btn.textContent="View design";
+  if(error){sayStatus("Could not open file: "+error.message);return;}
+  window.open(data.signedUrl,"_blank","noopener");
+ }));
+}
+async function loadRequests(){
+ const {data,error}=await db.from("pin_submissions").select("*").order("created_at",{ascending:false}).limit(100);
+ $("lastChecked").textContent="Checked "+new Date().toLocaleTimeString();
+ if(error){sayStatus("Could not load requests: "+error.message);return;}
+ if(!firstLoad){
+  const fresh=data.filter(r=>!knownIds.has(r.id));
+  fresh.reverse().forEach(notifyNew);
+  if(fresh.length) sayStatus(`${fresh.length} new request${fresh.length===1?"":"s"} received.`);
+ }
+ data.forEach(r=>knownIds.add(r.id));
+ firstLoad=false;
+ renderRows(data);
+}
+async function showApp(){
+ $("loginPanel").style.display="none";$("app").style.display="block";$("logout").style.display="inline-block";
+ await loadRequests();
+ if(pollHandle) clearInterval(pollHandle);
+ pollHandle=setInterval(loadRequests,10000);
+}
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(!ready){$("loginStatus").textContent="Setup needed: add your Supabase URL and anon key in this file.";return;}
+ $("loginBtn").disabled=true;$("loginStatus").textContent="Signing in…";
+ const {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+ $("loginBtn").disabled=false;
+ if(error){$("loginStatus").textContent=error.message;return;}
+ await showApp();
+});
+$("logout").addEventListener("click",async()=>{if(pollHandle)clearInterval(pollHandle);await db.auth.signOut();location.reload();});
+$("refresh").addEventListener("click",loadRequests);
+(async()=>{
+ if(!ready){$("loginStatus").textContent="Setup needed: add your Supabase Project URL and anon/public key in this file.";return;}
+ const {data}=await db.auth.getSession();
+ if(data.session) await showApp();
+})();
+</script>
+</body>
+</html>
