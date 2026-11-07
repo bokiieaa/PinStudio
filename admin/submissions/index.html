@@ -331,10 +331,37 @@ async function renderRows(rows) {
       button.disabled = true;
       button.textContent = "Saving…";
 
-      const {error} = await db
-        .from("pin_submissions")
-        .update({status:next})
-        .eq("id", id);
+const {data: updatedRow, error} = await db
+  .from("pin_submissions")
+  .update({status: next})
+  .eq("id", id)
+  .select("id,status")
+  .maybeSingle();
+
+if (error || !updatedRow) {
+  button.disabled = false;
+  button.textContent = current === "done"
+    ? "Reopen request"
+    : "✓ Mark as done";
+
+  sayStatus(
+    error
+      ? "Could not save status: " + error.message
+      : "Update failed. Check your Supabase admin UPDATE policy."
+  );
+  return;
+}
+
+const item = cachedRows.find(row => row.id === id);
+if (item) item.status = updatedRow.status;
+
+sayStatus(
+  next === "done"
+    ? "Request saved as done."
+    : "Request reopened."
+);
+
+await renderRows(cachedRows);
 
       if (error) {
         button.disabled = false;
