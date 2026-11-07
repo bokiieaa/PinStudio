@@ -44,8 +44,8 @@ label{display:block;font-weight:800;font-size:13px;margin:13px 0 6px}input{width
 <script>
 /* Use the same Supabase project as the public pin submission site.
    Use only the anon/public key here. Never put a service_role key in a website. */
-const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://bwejkyftmqxdvlcsnwov.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_NHwbzi01qt3ALn5aqTunzg_dPHlLwsC";
 const ready = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
 const db = ready ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 const $ = id => document.getElementById(id);
