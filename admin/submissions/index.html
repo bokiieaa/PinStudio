@@ -1,132 +1,367 @@
-
-<!doctype html>
+```html
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pin Studio — Request Inbox</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 :root {
-  --bg:#faf8f4;--ink:#24232b;--muted:#777582;
-  --line:#e8e3dc;--pink:#ff5d8f;--purple:#7562e8;
+  --bg:#faf8f4;
+  --ink:#24232b;
+  --muted:#777582;
+  --line:#e8e3dc;
+  --pink:#ff5d8f;
+  --purple:#7562e8;
   --green:#eaf6cb;
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
-header{max-width:1150px;margin:auto;padding:25px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
-.logo{font-size:21px;font-weight:950;letter-spacing:-1px}
-.logo span{color:var(--pink)}
-main{max-width:1150px;margin:38px auto;padding:0 24px}
-.top{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}
-h1{font-size:42px;letter-spacing:-2px;line-height:1.05;margin:0 0 7px}
-h2{margin-top:0}
-.muted{color:var(--muted)}
-button,.btn{border:0;border-radius:11px;padding:11px 15px;background:var(--ink);color:white;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}
-button.secondary{background:#eeeafc;color:#493bb0}
-button.done{background:#e5f2c8;color:#405c0d}
-button:disabled{opacity:.5;cursor:wait}
-.panel{background:white;border:1px solid var(--line);border-radius:19px;padding:22px;margin-bottom:18px}
-label{display:block;font-weight:800;font-size:13px;margin:13px 0 6px}
-input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit}
-.login{max-width:430px;margin:60px auto}
-.login button{width:100%;margin-top:18px}
-.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.toolbar .muted{font-size:13px}
-#status{font-size:13px;color:var(--muted);margin-top:12px}
-.pill{display:inline-block;background:#f0edff;color:#5546b9;padding:4px 9px;border-radius:99px;font-size:12px;font-weight:850}
-.status-done{background:#eaf6cb;color:#405c0d}
-.status-new{background:#fff0f5;color:#b02c60}
-.request{padding:21px 0;border-top:1px solid var(--line)}
-.request:first-child{border-top:0}
-.request-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
-.request h3{margin:0;font-size:19px}
-.meta{font-size:13px;color:var(--muted);margin:4px 0 10px}
-.notes{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:15px 0}
-.design-card{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff}
-.design-card img{width:100%;height:155px;object-fit:contain;background:#f5f3f0;display:block}
-.design-info{padding:9px;font-size:12px;overflow-wrap:anywhere}
-.design-info a{color:var(--purple);font-weight:800;text-decoration:none}
-.request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
-.empty{text-align:center;padding:42px 12px;color:var(--muted)}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
-.filter.active{background:var(--purple);color:white}
-#app{display:none}
-.small{font-size:12px;color:var(--muted)}
-@media(max-width:650px){
- .top{display:block}
- h1{font-size:34px}
- .request-head{display:block}
- .request-head .pill{margin-top:10px}
- .gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+* { box-sizing:border-box; }
+
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font:15px/1.5 Inter,system-ui,sans-serif;
+}
+
+header {
+  max-width:1150px;
+  margin:auto;
+  padding:25px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid var(--line);
+}
+
+.logo {
+  font-size:21px;
+  font-weight:950;
+  letter-spacing:-1px;
+}
+
+.logo span { color:var(--pink); }
+
+main {
+  max-width:1150px;
+  margin:38px auto;
+  padding:0 24px;
+}
+
+.top {
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:20px;
+  margin-bottom:24px;
+}
+
+h1 {
+  font-size:42px;
+  letter-spacing:-2px;
+  line-height:1.05;
+  margin:0 0 7px;
+}
+
+h2 { margin-top:0; }
+
+.muted { color:var(--muted); }
+
+button,.btn {
+  border:0;
+  border-radius:11px;
+  padding:11px 15px;
+  background:var(--ink);
+  color:white;
+  font-weight:800;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-block;
+}
+
+button.secondary {
+  background:#eeeafc;
+  color:#493bb0;
+}
+
+button.done {
+  background:#e5f2c8;
+  color:#405c0d;
+}
+
+button:disabled {
+  opacity:.5;
+  cursor:wait;
+}
+
+.panel {
+  background:white;
+  border:1px solid var(--line);
+  border-radius:19px;
+  padding:22px;
+  margin-bottom:18px;
+}
+
+label {
+  display:block;
+  font-weight:800;
+  font-size:13px;
+  margin:13px 0 6px;
+}
+
+input {
+  width:100%;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  font:inherit;
+}
+
+.login {
+  max-width:430px;
+  margin:60px auto;
+}
+
+.login button {
+  width:100%;
+  margin-top:18px;
+}
+
+.toolbar {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.toolbar .muted { font-size:13px; }
+
+#status {
+  font-size:13px;
+  color:var(--muted);
+  margin-top:12px;
+}
+
+.pill {
+  display:inline-block;
+  background:#f0edff;
+  color:#5546b9;
+  padding:4px 9px;
+  border-radius:99px;
+  font-size:12px;
+  font-weight:850;
+}
+
+.status-done {
+  background:#eaf6cb;
+  color:#405c0d;
+}
+
+.status-new {
+  background:#fff0f5;
+  color:#b02c60;
+}
+
+.request {
+  padding:21px 0;
+  border-top:1px solid var(--line);
+}
+
+.request:first-child { border-top:0; }
+
+.request-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:15px;
+}
+
+.request h3 {
+  margin:0;
+  font-size:19px;
+}
+
+.meta {
+  font-size:13px;
+  color:var(--muted);
+  margin:4px 0 10px;
+}
+
+.notes {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  margin:10px 0;
+}
+
+.gallery {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:12px;
+  margin:15px 0;
+}
+
+.design-card {
+  border:1px solid var(--line);
+  border-radius:13px;
+  overflow:hidden;
+  background:#fff;
+}
+
+.design-card img {
+  width:100%;
+  height:155px;
+  object-fit:contain;
+  background:#f5f3f0;
+  display:block;
+}
+
+.design-info {
+  padding:9px;
+  font-size:12px;
+  overflow-wrap:anywhere;
+}
+
+.design-info a {
+  color:var(--purple);
+  font-weight:800;
+  text-decoration:none;
+}
+
+.request-actions {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:15px;
+}
+
+.empty {
+  text-align:center;
+  padding:42px 12px;
+  color:var(--muted);
+}
+
+.filters {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:15px 0;
+}
+
+.filter.active {
+  background:var(--purple);
+  color:white;
+}
+
+#app { display:none; }
+
+.small {
+  font-size:12px;
+  color:var(--muted);
+}
+
+@media(max-width:650px) {
+  .top { display:block; }
+  h1 { font-size:34px; }
+  .request-head { display:block; }
+  .request-head .pill { margin-top:10px; }
+  .gallery { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 </style>
 </head>
+
 <body>
+
 <header>
- <div class="logo">PIN<span>STUDIO.</span>
-  <span style="color:#777582;font-size:13px;letter-spacing:0;font-weight:700"> / REQUEST INBOX</span>
- </div>
- <button id="logout" class="secondary" style="display:none">Sign out</button>
+  <div class="logo">
+    PIN<span>STUDIO.</span>
+    <span style="color:#777582;font-size:13px;letter-spacing:0;font-weight:700">
+      / REQUEST INBOX
+    </span>
+  </div>
+
+  <button id="logout" class="secondary" style="display:none">
+    Sign out
+  </button>
 </header>
 
 <main>
- <section id="loginPanel" class="panel login">
-  <h2>Owner sign in</h2>
-  <div class="muted">Sign in with your Supabase admin account.</div>
-  <form id="loginForm">
-   <label for="email">Email</label>
-   <input id="email" type="email" autocomplete="username" required>
-   <label for="password">Password</label>
-   <input id="password" type="password" autocomplete="current-password" required>
-   <button type="submit" id="loginBtn">Sign in</button>
-  </form>
-  <div id="loginStatus" class="small" role="status"></div>
- </section>
 
- <section id="app">
-  <div class="top">
-   <div>
-    <h1>Pin requests.</h1>
-    <div class="muted">Your private inbox for submitted designs.</div>
-   </div>
-   <div class="toolbar">
-    <button id="enableAlerts" class="secondary">Enable sound & notifications</button>
-    <button id="refresh">Refresh</button>
-   </div>
-  </div>
+  <section id="loginPanel" class="panel login">
+    <h2>Owner sign in</h2>
+    <div class="muted">Sign in with your Supabase admin account.</div>
 
-  <div class="panel">
-   <div class="toolbar">
-    <span class="pill" id="count">0 requests</span>
-    <span class="muted" id="lastChecked">Not checked yet</span>
-   </div>
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required>
 
-   <div class="filters">
-    <button class="filter active" data-filter="all">All</button>
-    <button class="filter secondary" data-filter="new">New</button>
-    <button class="filter secondary" data-filter="done">Done</button>
-   </div>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
 
-   <div id="requests">
-    <div class="empty">Loading submissions…</div>
-   </div>
-   <div id="status" role="status"></div>
-  </div>
+      <button type="submit" id="loginBtn">Sign in</button>
+    </form>
 
-  <p class="small">
-   Keep this page open to receive alerts. New requests are checked every 10 seconds.
-   Browser notifications require permission; sound starts after you enable alerts.
-  </p>
- </section>
+    <div id="loginStatus" class="small" role="status"></div>
+  </section>
+
+  <section id="app">
+
+    <div class="top">
+      <div>
+        <h1>Pin requests.</h1>
+        <div class="muted">Your private inbox for submitted designs.</div>
+      </div>
+
+      <div class="toolbar">
+        <button id="enableAlerts" class="secondary">
+          Enable sound & notifications
+        </button>
+        <button id="refresh">Refresh</button>
+      </div>
+    </div>
+
+    <div class="panel">
+
+      <div class="toolbar">
+        <span class="pill" id="count">0 requests</span>
+        <span class="muted" id="lastChecked">Not checked yet</span>
+      </div>
+
+      <div class="filters">
+        <button class="filter active" data-filter="all">All</button>
+        <button class="filter secondary" data-filter="new">New</button>
+        <button class="filter secondary" data-filter="done">Done</button>
+      </div>
+
+      <div id="requests">
+        <div class="empty">Loading submissions…</div>
+      </div>
+
+      <div id="status" role="status"></div>
+
+    </div>
+
+    <p class="small">
+      Keep this page open to receive alerts. New requests are checked every 10 seconds.
+      Browser notifications require permission; sound starts after you enable alerts.
+    </p>
+
+  </section>
 </main>
 
 <script>
+"use strict";
+
 const SUPABASE_URL = "https://bwejkyftmqxdvlcsnwov.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_NHwbzi01qt3ALn5aqTunzg_dPHlLwsC";
 
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
 const $ = id => document.getElementById(id);
 
 let knownIds = new Set();
@@ -136,6 +371,9 @@ let audioContext = null;
 let pollHandle = null;
 let currentFilter = "all";
 let cachedRows = [];
+let loadInProgress = false;
+let renderVersion = 0;
+let savingIds = new Set();
 
 function sayStatus(message) {
   $("status").textContent = message;
@@ -143,14 +381,21 @@ function sayStatus(message) {
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
   }[c]));
 }
+
+/* IMAGE HELPERS */
 
 function getDesignPaths(row) {
   if (Array.isArray(row.design_paths) && row.design_paths.length) {
     return row.design_paths.filter(Boolean);
   }
+
   return row.design_path ? [row.design_path] : [];
 }
 
@@ -158,9 +403,18 @@ function getDesignNames(row, count) {
   if (Array.isArray(row.original_filenames) && row.original_filenames.length) {
     return row.original_filenames;
   }
-  if (row.original_filename) return [row.original_filename];
-  return Array.from({length:count}, (_,i) => `Pin ${i+1} design`);
+
+  if (row.original_filename) {
+    return [row.original_filename];
+  }
+
+  return Array.from(
+    {length:count},
+    (_,i) => `Pin ${i+1} design`
+  );
 }
+
+/* NOTIFICATIONS */
 
 function playChime() {
   if (!alertsEnabled || !audioContext) return;
@@ -180,6 +434,7 @@ function playChime() {
 
     osc.connect(gain);
     gain.connect(audioContext.destination);
+
     osc.start(now+i*.16);
     osc.stop(now+i*.16+.3);
   });
@@ -187,18 +442,26 @@ function playChime() {
 
 async function enableAlerts() {
   try {
-    if ("Notification" in window && Notification.permission === "default") {
+    if (
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
       await Notification.requestPermission();
     }
 
-    audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+    audioContext = audioContext ||
+      new (window.AudioContext || window.webkitAudioContext)();
+
     await audioContext.resume();
 
     alertsEnabled = true;
+
     $("enableAlerts").textContent = "Alerts enabled ✓";
     $("enableAlerts").disabled = true;
+
     sayStatus("Alerts are enabled. Keep this tab open.");
-  } catch(e) {
+
+  } catch(error) {
     sayStatus("Could not enable sound. Check your browser permissions.");
   }
 }
@@ -208,13 +471,19 @@ $("enableAlerts").addEventListener("click", enableAlerts);
 function notifyNew(row) {
   playChime();
 
-  if (alertsEnabled && "Notification" in window && Notification.permission === "granted") {
+  if (
+    alertsEnabled &&
+    "Notification" in window &&
+    Notification.permission === "granted"
+  ) {
     new Notification("New pin design request!", {
       body:`${row.customer_name} submitted a request for ${row.package_quantity} pin(s).`,
       tag:row.id
     });
   }
 }
+
+/* IMAGE GALLERY */
 
 async function makeGallery(row) {
   const paths = getDesignPaths(row);
@@ -238,28 +507,47 @@ async function makeGallery(row) {
     const name = names[index] || `Pin ${index+1} design`;
 
     if (!url) {
-      return `<div class="design-card"><div class="design-info">Pin ${index+1}: Image unavailable</div></div>`;
+      return `
+        <div class="design-card">
+          <div class="design-info">
+            Pin ${index+1}: Image unavailable
+          </div>
+        </div>
+      `;
     }
 
     return `
       <div class="design-card">
         <a href="${escapeHtml(url)}" target="_blank" rel="noopener">
-          <img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" loading="lazy">
+          <img
+            src="${escapeHtml(url)}"
+            alt="${escapeHtml(name)}"
+            loading="lazy"
+          >
         </a>
+
         <div class="design-info">
           <strong>Pin ${index+1}</strong><br>
           ${escapeHtml(name)}<br>
-          <a href="${escapeHtml(url)}" target="_blank" rel="noopener">Open full image ↗</a>
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener">
+            Open full image ↗
+          </a>
         </div>
       </div>
     `;
   }).join("");
 }
 
+/* REQUEST RENDERING */
+
 async function renderRows(rows) {
+  const thisRender = ++renderVersion;
+
   const filtered = rows.filter(row => {
-    const status = row.status || "new";
+    const status = row.status === "done" ? "done" : "new";
+
     if (currentFilter === "all") return true;
+
     return status === currentFilter;
   });
 
@@ -267,7 +555,8 @@ async function renderRows(rows) {
     `${filtered.length} ${currentFilter === "all" ? "requests" : currentFilter + " requests"}`;
 
   if (!filtered.length) {
-    $("requests").innerHTML = `<div class="empty">No ${currentFilter === "all" ? "" : currentFilter + " "}requests found.</div>`;
+    $("requests").innerHTML =
+      `<div class="empty">No ${currentFilter === "all" ? "" : currentFilter + " "}requests found.</div>`;
     return;
   }
 
@@ -278,19 +567,24 @@ async function renderRows(rows) {
 
     const price = Number(row.package_price);
     const done = row.status === "done";
+    const saving = savingIds.has(row.id);
 
     return `
       <article class="request" data-request="${escapeHtml(row.id)}">
+
         <div class="request-head">
           <div>
             <h3>${escapeHtml(row.customer_name)}</h3>
+
             <div class="meta">
               ${escapeHtml(row.customer_email)} · ${escapeHtml(date)}
             </div>
+
             <span class="pill">
               ${escapeHtml(row.package_quantity)} pins ·
               $${Number.isFinite(price) ? price : "—"}
             </span>
+
             ${row.notes ? `<p class="notes">${escapeHtml(row.notes)}</p>` : ""}
           </div>
 
@@ -307,106 +601,160 @@ async function renderRows(rows) {
           <button
             class="${done ? "secondary" : "done"}"
             data-toggle-done="${escapeHtml(row.id)}"
-            data-current="${done ? "done" : "new"}">
-            ${done ? "Reopen request" : "✓ Mark as done"}
+            data-current="${done ? "done" : "new"}"
+            ${saving ? "disabled" : ""}
+          >
+            ${saving ? "Saving…" : done ? "Reopen request" : "✓ Mark as done"}
           </button>
         </div>
+
       </article>
     `;
   }).join("");
 
-  // Load all image galleries.
-  for (const row of filtered) {
+  // Load image galleries concurrently.
+  await Promise.all(filtered.map(async row => {
     const gallery = $("gallery-" + row.id);
-    if (gallery) gallery.innerHTML = await makeGallery(row);
-  }
 
-  // Attach completion buttons.
+    if (!gallery) return;
+
+    const galleryHtml = await makeGallery(row);
+
+    if (thisRender === renderVersion && gallery.isConnected) {
+      gallery.innerHTML = galleryHtml;
+    }
+  }));
+
+  if (thisRender !== renderVersion) return;
+
+  // Attach status buttons.
   $("requests").querySelectorAll("[data-toggle-done]").forEach(button => {
-    button.addEventListener("click", async () => {
-      const id = button.dataset.toggleDone;
-      const current = button.dataset.current;
-      const next = current === "done" ? "new" : "done";
-
-      button.disabled = true;
-      button.textContent = "Saving…";
-
-const {data: updatedRow, error} = await db
-  .from("pin_submissions")
-  .update({status: next})
-  .eq("id", id)
-  .select("id,status")
-  .maybeSingle();
-
-if (error || !updatedRow) {
-  button.disabled = false;
-  button.textContent = current === "done"
-    ? "Reopen request"
-    : "✓ Mark as done";
-
-  sayStatus(
-    error
-      ? "Could not save status: " + error.message
-      : "Update failed. Check your Supabase admin UPDATE policy."
-  );
-  return;
-}
-
-const item = cachedRows.find(row => row.id === id);
-if (item) item.status = updatedRow.status;
-
-sayStatus(
-  next === "done"
-    ? "Request saved as done."
-    : "Request reopened."
-);
-
-await renderRows(cachedRows);
-
-      if (error) {
-        button.disabled = false;
-        button.textContent = current === "done" ? "Reopen request" : "✓ Mark as done";
-        sayStatus("Could not update request: " + error.message);
-        return;
-      }
-
-      const item = cachedRows.find(row => row.id === id);
-      if (item) item.status = next;
-
-      sayStatus(next === "done" ? "Request marked as done." : "Request reopened.");
-      await renderRows(cachedRows);
-    });
+    button.addEventListener("click", () => toggleDone(button));
   });
 }
 
-async function loadRequests() {
-  const {data,error} = await db
-    .from("pin_submissions")
-    .select("*")
-    .order("created_at", {ascending:false})
-    .limit(100);
+/* SAVE DONE STATUS */
 
-  $("lastChecked").textContent = "Checked " + new Date().toLocaleTimeString();
+async function toggleDone(button) {
+  const id = button.dataset.toggleDone;
 
-  if (error) {
-    sayStatus("Could not load requests: " + error.message);
-    return;
-  }
+  if (savingIds.has(id)) return;
 
-  if (!firstLoad) {
-    const fresh = data.filter(row => !knownIds.has(row.id));
-    fresh.reverse().forEach(notifyNew);
+  const current = button.dataset.current;
+  const next = current === "done" ? "new" : "done";
 
-    if (fresh.length) {
-      sayStatus(`${fresh.length} new request${fresh.length === 1 ? "" : "s"} received.`);
+  savingIds.add(id);
+
+  button.disabled = true;
+  button.textContent = "Saving…";
+
+  try {
+    const {data:updatedRow, error} = await db
+      .from("pin_submissions")
+      .update({status:next})
+      .eq("id", id)
+      .select("id,status")
+      .maybeSingle();
+
+    if (error) {
+      sayStatus("Could not save status: " + error.message);
+      return;
     }
+
+    if (!updatedRow) {
+      sayStatus(
+        "No row was updated. Check your Supabase admin UPDATE policy and signed-in email."
+      );
+      return;
+    }
+
+    // Update the local cache only after Supabase confirms the update.
+    const item = cachedRows.find(row => row.id === id);
+
+    if (item) {
+      item.status = updatedRow.status;
+    }
+
+    sayStatus(
+      updatedRow.status === "done"
+        ? "Request successfully saved as done."
+        : "Request successfully reopened."
+    );
+
+  } catch(error) {
+    sayStatus("Unexpected error saving status: " + error.message);
+
+  } finally {
+    savingIds.delete(id);
   }
 
-  data.forEach(row => knownIds.add(row.id));
-  firstLoad = false;
-  cachedRows = data;
-  await renderRows(data);
+  // Re-render using the current filter.
+  await renderRows(cachedRows);
 }
+
+/* LOAD REQUESTS */
+
+async function loadRequests() {
+  // Prevent overlapping automatic and manual refreshes.
+  if (loadInProgress) return;
+
+  loadInProgress = true;
+
+  try {
+    const {data,error} = await db
+      .from("pin_submissions")
+      .select("*")
+      .order("created_at", {ascending:false})
+      .limit(100);
+
+    $("lastChecked").textContent =
+      "Checked " + new Date().toLocaleTimeString();
+
+    if (error) {
+      sayStatus("Could not load requests: " + error.message);
+      return;
+    }
+
+    if (!data) {
+      sayStatus("No data returned from Supabase.");
+      return;
+    }
+
+    // Notify only about genuinely new request IDs.
+    if (!firstLoad) {
+      const fresh = data.filter(row => !knownIds.has(row.id));
+
+      fresh.reverse().forEach(notifyNew);
+
+      if (fresh.length) {
+        sayStatus(
+          `${fresh.length} new request${fresh.length === 1 ? "" : "s"} received.`
+        );
+      }
+    }
+
+    data.forEach(row => knownIds.add(row.id));
+
+    firstLoad = false;
+
+    // The database is the source of truth.
+    // Keep the exact status returned by Supabase.
+    cachedRows = data.map(row => ({
+      ...row,
+      status: row.status === "done" ? "done" : "new"
+    }));
+
+    await renderRows(cachedRows);
+
+  } catch(error) {
+    sayStatus("Could not load requests: " + error.message);
+
+  } finally {
+    loadInProgress = false;
+  }
+}
+
+/* LOGIN */
 
 async function showApp() {
   $("loginPanel").style.display = "none";
@@ -415,7 +763,10 @@ async function showApp() {
 
   await loadRequests();
 
-  if (pollHandle) clearInterval(pollHandle);
+  if (pollHandle) {
+    clearInterval(pollHandle);
+  }
+
   pollHandle = setInterval(loadRequests, 10000);
 }
 
@@ -425,28 +776,47 @@ $("loginForm").addEventListener("submit", async event => {
   $("loginBtn").disabled = true;
   $("loginStatus").textContent = "Signing in…";
 
-  const {error} = await db.auth.signInWithPassword({
-    email:$("email").value.trim(),
-    password:$("password").value
-  });
+  try {
+    const {error} = await db.auth.signInWithPassword({
+      email:$("email").value.trim(),
+      password:$("password").value
+    });
 
-  $("loginBtn").disabled = false;
+    if (error) {
+      $("loginStatus").textContent = error.message;
+      return;
+    }
 
-  if (error) {
-    $("loginStatus").textContent = error.message;
-    return;
+    $("loginStatus").textContent = "";
+
+    await showApp();
+
+  } catch(error) {
+    $("loginStatus").textContent = "Login error: " + error.message;
+
+  } finally {
+    $("loginBtn").disabled = false;
   }
-
-  await showApp();
 });
 
+/* LOGOUT */
+
 $("logout").addEventListener("click", async () => {
-  if (pollHandle) clearInterval(pollHandle);
+  if (pollHandle) {
+    clearInterval(pollHandle);
+    pollHandle = null;
+  }
+
   await db.auth.signOut();
+
   location.reload();
 });
 
+/* MANUAL REFRESH */
+
 $("refresh").addEventListener("click", loadRequests);
+
+/* FILTERS */
 
 document.querySelectorAll("[data-filter]").forEach(button => {
   button.addEventListener("click", async () => {
@@ -464,16 +834,27 @@ document.querySelectorAll("[data-filter]").forEach(button => {
   });
 });
 
+/* RESTORE EXISTING LOGIN SESSION */
+
 (async () => {
-  const {data,error} = await db.auth.getSession();
+  try {
+    const {data,error} = await db.auth.getSession();
 
-  if (error) {
-    $("loginStatus").textContent = error.message;
-    return;
+    if (error) {
+      $("loginStatus").textContent = error.message;
+      return;
+    }
+
+    if (data.session) {
+      await showApp();
+    }
+
+  } catch(error) {
+    $("loginStatus").textContent = "Session error: " + error.message;
   }
-
-  if (data.session) await showApp();
 })();
 </script>
+
 </body>
 </html>
+```
